@@ -27,20 +27,20 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/openstack-lightspeed/o2/test/utils"
+	"github.com/openstack-lightspeed/openstack-lightspeed-operator/test/utils"
 )
 
 // namespace where the project is deployed in
-const namespace = "o2-system"
+const namespace = "openstack-lightspeed-system"
 
 // serviceAccountName created for the project
-const serviceAccountName = "o2-controller-manager"
+const serviceAccountName = "openstack-lightspeed-controller-manager"
 
 // metricsServiceName is the name of the metrics service of the project
-const metricsServiceName = "o2-controller-manager-metrics-service"
+const metricsServiceName = "openstack-lightspeed-controller-manager-metrics-service"
 
 // metricsRoleBindingName is the name of the RBAC that will be created to allow get the metrics data
-const metricsRoleBindingName = "o2-metrics-binding"
+const metricsRoleBindingName = "openstack-lightspeed-metrics-binding"
 
 var _ = Describe("Manager", Ordered, func() {
 	var controllerPodName string
@@ -173,7 +173,7 @@ var _ = Describe("Manager", Ordered, func() {
 		It("should ensure the metrics endpoint is serving metrics", func() {
 			By("creating a ClusterRoleBinding for the service account to allow access to metrics")
 			cmd := exec.Command("kubectl", "create", "clusterrolebinding", metricsRoleBindingName,
-				"--clusterrole=o2-metrics-reader",
+				"--clusterrole=openstack-lightspeed-metrics-reader",
 				fmt.Sprintf("--serviceaccount=%s:%s", namespace, serviceAccountName),
 			)
 			_, err := utils.Run(cmd)
@@ -271,7 +271,7 @@ var _ = Describe("Manager", Ordered, func() {
 			verifyCAInjection := func(g Gomega) {
 				cmd := exec.Command("kubectl", "get",
 					"mutatingwebhookconfigurations.admissionregistration.k8s.io",
-					"o2-mutating-webhook-configuration",
+					"openstack-lightspeed-mutating-webhook-configuration",
 					"-o", "go-template={{ range .webhooks }}{{ .clientConfig.caBundle }}{{ end }}")
 				mwhOutput, err := utils.Run(cmd)
 				g.Expect(err).NotTo(HaveOccurred())

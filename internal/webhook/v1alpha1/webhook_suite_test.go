@@ -39,7 +39,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	olsv1alpha1 "github.com/openstack-lightspeed/o2/api/v1alpha1"
+	olsv1alpha1 "github.com/openstack-lightspeed/openstack-lightspeed-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

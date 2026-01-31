@@ -2,7 +2,7 @@ apiVersion: ols.openshift.io/v1alpha1
 kind: OLSConfig
 metadata:
   labels:
-    app.kubernetes.io/name: o2
+    app.kubernetes.io/name: openstack-lightspeed-operator
     app.kubernetes.io/managed-by: kustomize
   name: olsconfig-sample
 spec:

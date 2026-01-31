@@ -18,15 +18,28 @@ package v1alpha1
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
+	"os"
 
+	upstreamolsv1alpha1 "github.com/openshift/lightspeed-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	olsv1alpha1 "github.com/openstack-lightspeed/o2/api/v1alpha1"
+	olsv1alpha1 "github.com/openstack-lightspeed/openstack-lightspeed-operator/api/v1alpha1"
 )
+
+const (
+	// OpenStackLightSpeedAnnotation is the annotation that identifies this CR as an OpenStackLightSpeed instance
+	OpenStackLightSpeedAnnotation = "openstack-lightspeed.openshift.io/enabled"
+	// OpenStackLightSpeedRAGImageEnv is the environment variable containing the default RAG image
+	OpenStackLightSpeedRAGImageEnv = "RELATED_IMAGE_OPENSTACK_LIGHTSPEED_RAG_IMAGE_URL_DEFAULT"
+)
+
+//go:embed system_prompt.txt
+var openstackLightspeedSystemPrompt string
 
 // nolint:unused
 // log is for logging in this package.
@@ -63,7 +76,34 @@ func (d *OLSConfigCustomDefaulter) Default(_ context.Context, obj runtime.Object
 	}
 	olsconfiglog.Info("Defaulting for OLSConfig", "name", olsconfig.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	// Check if this is an OpenStackLightSpeed instance
+	if enabled, exists := olsconfig.Annotations[OpenStackLightSpeedAnnotation]; exists && enabled == "true" {
+		olsconfiglog.Info("Applying OpenStackLightSpeed defaults", "name", olsconfig.GetName())
+
+		// Set byokRAGOnly to true
+		olsconfig.Spec.OLSConfig.ByokRAGOnly = true
+
+		// Set querySystemPrompt from embedded file
+		olsconfig.Spec.OLSConfig.QuerySystemPrompt = openstackLightspeedSystemPrompt
+
+		// Set ragImage only if RAG is not already configured
+		if len(olsconfig.Spec.OLSConfig.RAG) == 0 {
+			ragImage := os.Getenv(OpenStackLightSpeedRAGImageEnv)
+			if ragImage != "" {
+				olsconfig.Spec.OLSConfig.RAG = []upstreamolsv1alpha1.RAGSpec{
+					{
+						Image: ragImage,
+					},
+				}
+				olsconfiglog.Info("Set OpenStackLightSpeed RAG image", "image", ragImage)
+			} else {
+				olsconfiglog.Info("OpenStackLightSpeed RAG image environment variable not set",
+					"envVar", OpenStackLightSpeedRAGImageEnv)
+			}
+		} else {
+			olsconfiglog.Info("RAG already configured, skipping RAG image default")
+		}
+	}
 
 	return nil
 }

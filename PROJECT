@@ -8,8 +8,8 @@ layout:
 plugins:
   manifests.sdk.operatorframework.io/v2: {}
   scorecard.sdk.operatorframework.io/v2: {}
-projectName: o2
-repo: github.com/openstack-lightspeed/o2
+projectName: openstack-lightspeed-operator
+repo: github.com/openstack-lightspeed/openstack-lightspeed-operator
 resources:
 - api:
     crdVersion: v1
@@ -18,7 +18,7 @@ resources:
   domain: openshift.io
   group: ols
   kind: OLSConfig
-  path: github.com/openstack-lightspeed/o2/api/v1alpha1
+  path: github.com/openstack-lightspeed/openstack-lightspeed-operator/api/v1alpha1
   version: v1alpha1
   webhooks:
     defaulting: true
