@@ -1,0 +1,45 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: openstack-lightspeed-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: OLSConfig is the Schema for the olsconfigs API.
+      displayName: OLSConfig
+      kind: OLSConfig
+      name: olsconfigs.ols.openshift.io
+      version: v1alpha1
+  description: OpenStackLightSpeed Operator
+  displayName: openstacklightspeed-operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - OpenStack LightSpeed AI
+  links:
+  - name: OpenStack Lightspeed Operator
+    url: https://openstack-lightspeed-operator.domain
+  maturity: alpha
+  minKubeVersion: 1.31.0
+  provider:
+    name: Red Hat Inc
+  version: 0.0.0
