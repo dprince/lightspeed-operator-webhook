@@ -2,7 +2,7 @@
 # This file is used to track the info used to scaffold your project
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
-domain: lightspeed.openstack.org
+domain: openshift.io
 layout:
 - go.kubebuilder.io/v4
 plugins:
@@ -10,4 +10,17 @@ plugins:
   scorecard.sdk.operatorframework.io/v2: {}
 projectName: o2
 repo: github.com/openstack-lightspeed/o2
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: false
+  domain: openshift.io
+  group: ols
+  kind: OLSConfig
+  path: github.com/openstack-lightspeed/o2/api/v1alpha1
+  version: v1alpha1
+  webhooks:
+    defaulting: true
+    webhookVersion: v1
 version: "3"
