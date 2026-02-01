@@ -79,6 +79,9 @@ var _ = Describe("OLSConfig Webhook", func() {
 			By("checking that RAG image is set")
 			Expect(obj.Spec.OLSConfig.RAG).To(HaveLen(1))
 			Expect(obj.Spec.OLSConfig.RAG[0].Image).To(Equal(testRAGImage))
+
+			By("checking that RAG IndexPath is set")
+			Expect(obj.Spec.OLSConfig.RAG[0].IndexPath).To(Equal("/rag/vector_db/os_product_docs"))
 		})
 
 		It("Should not apply defaults when annotation is not set", func() {
@@ -116,7 +119,7 @@ var _ = Describe("OLSConfig Webhook", func() {
 			Expect(obj.Spec.OLSConfig.RAG).To(BeEmpty())
 		})
 
-		It("Should skip RAG image when RAG is already configured", func() {
+		It("Should skip RAG image when RAG is already configured but set IndexPath if missing", func() {
 			By("setting the OpenStackLightSpeed annotation")
 			obj.ObjectMeta = metav1.ObjectMeta{
 				Name: "test-config",
@@ -125,7 +128,7 @@ var _ = Describe("OLSConfig Webhook", func() {
 				},
 			}
 
-			By("pre-configuring a RAG entry")
+			By("pre-configuring a RAG entry without IndexPath")
 			existingRAGImage := "quay.io/existing/rag:v1"
 			obj.Spec.OLSConfig.RAG = []upstreamolsv1alpha1.RAGSpec{
 				{
@@ -149,6 +152,47 @@ var _ = Describe("OLSConfig Webhook", func() {
 			By("checking that existing RAG configuration is preserved")
 			Expect(obj.Spec.OLSConfig.RAG).To(HaveLen(1))
 			Expect(obj.Spec.OLSConfig.RAG[0].Image).To(Equal(existingRAGImage))
+
+			By("checking that IndexPath was set for existing RAG entry")
+			Expect(obj.Spec.OLSConfig.RAG[0].IndexPath).To(Equal("/rag/vector_db/os_product_docs"))
+		})
+
+		It("Should not overwrite existing IndexPath when RAG is already configured", func() {
+			By("setting the OpenStackLightSpeed annotation")
+			obj.ObjectMeta = metav1.ObjectMeta{
+				Name: "test-config",
+				Annotations: map[string]string{
+					OpenStackLightSpeedAnnotation: "true",
+				},
+			}
+
+			By("pre-configuring a RAG entry with custom IndexPath")
+			existingRAGImage := "quay.io/existing/rag:v1"
+			existingIndexPath := "/custom/path"
+			obj.Spec.OLSConfig.RAG = []upstreamolsv1alpha1.RAGSpec{
+				{
+					Image:     existingRAGImage,
+					IndexPath: existingIndexPath,
+				},
+			}
+
+			By("setting the RAG image environment variable")
+			testRAGImage := "quay.io/test/openstack-lightspeed-rag:latest"
+			os.Setenv(OpenStackLightSpeedRAGImageEnv, testRAGImage)
+			defer os.Unsetenv(OpenStackLightSpeedRAGImageEnv)
+
+			By("calling the Default method")
+			err := defaulter.Default(context.Background(), obj)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking that byokRAGOnly and querySystemPrompt are still set")
+			Expect(obj.Spec.OLSConfig.ByokRAGOnly).To(BeTrue())
+			Expect(obj.Spec.OLSConfig.QuerySystemPrompt).To(Equal(openstackLightspeedSystemPrompt))
+
+			By("checking that existing RAG configuration is fully preserved")
+			Expect(obj.Spec.OLSConfig.RAG).To(HaveLen(1))
+			Expect(obj.Spec.OLSConfig.RAG[0].Image).To(Equal(existingRAGImage))
+			Expect(obj.Spec.OLSConfig.RAG[0].IndexPath).To(Equal(existingIndexPath))
 		})
 
 		It("Should not set RAG image when environment variable is not set", func() {

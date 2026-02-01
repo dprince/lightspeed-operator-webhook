@@ -92,7 +92,8 @@ func (d *OLSConfigCustomDefaulter) Default(_ context.Context, obj runtime.Object
 			if ragImage != "" {
 				olsconfig.Spec.OLSConfig.RAG = []upstreamolsv1alpha1.RAGSpec{
 					{
-						Image: ragImage,
+						Image:     ragImage,
+						IndexPath: "/rag/vector_db/os_product_docs",
 					},
 				}
 				olsconfiglog.Info("Set OpenStackLightSpeed RAG image", "image", ragImage)
@@ -101,7 +102,13 @@ func (d *OLSConfigCustomDefaulter) Default(_ context.Context, obj runtime.Object
 					"envVar", OpenStackLightSpeedRAGImageEnv)
 			}
 		} else {
-			olsconfiglog.Info("RAG already configured, skipping RAG image default")
+			// If RAG is already configured, ensure IndexPath is set
+			for i := range olsconfig.Spec.OLSConfig.RAG {
+				if olsconfig.Spec.OLSConfig.RAG[i].IndexPath == "" {
+					olsconfig.Spec.OLSConfig.RAG[i].IndexPath = "/rag/vector_db/os_product_docs"
+					olsconfiglog.Info("Set RAG IndexPath for existing RAG entry", "index", i)
+				}
+			}
 		}
 	}
 
