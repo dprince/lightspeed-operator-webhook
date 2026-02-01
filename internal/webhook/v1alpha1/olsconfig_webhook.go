@@ -21,6 +21,7 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"strings"
 
 	upstreamolsv1alpha1 "github.com/openshift/lightspeed-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -44,6 +45,26 @@ var openstackLightspeedSystemPrompt string
 // nolint:unused
 // log is for logging in this package.
 var olsconfiglog = logf.Log.WithName("olsconfig-resource")
+
+// openstackLightspeedRAGImage stores the discovered RELATED_IMAGE value
+var openstackLightspeedRAGImage string
+
+// SetupDefaults sets up default environment variables from the environment.
+func SetupDefaults() {
+	// Iterate through environment variables to find RELATED_IMAGE_OPENSTACK_LIGHTSPEED_RAG_IMAGE_URL_DEFAULT
+	for _, env := range os.Environ() {
+		if strings.HasPrefix(env, OpenStackLightSpeedRAGImageEnv+"=") {
+			// Split on first '=' to get the value
+			parts := strings.SplitN(env, "=", 2)
+			if len(parts) == 2 {
+				openstackLightspeedRAGImage = parts[1]
+				olsconfiglog.Info("Discovered RELATED_IMAGE environment variable",
+					"envVar", OpenStackLightSpeedRAGImageEnv, "value", openstackLightspeedRAGImage)
+				break
+			}
+		}
+	}
+}
 
 // SetupOLSConfigWebhookWithManager registers the webhook for OLSConfig in the manager.
 func SetupOLSConfigWebhookWithManager(mgr ctrl.Manager) error {
@@ -87,27 +108,19 @@ func (d *OLSConfigCustomDefaulter) Default(_ context.Context, obj runtime.Object
 		olsconfig.Spec.OLSConfig.QuerySystemPrompt = openstackLightspeedSystemPrompt
 
 		// Set ragImage only if RAG is not already configured
+		// and if so also set IndexPath
 		if len(olsconfig.Spec.OLSConfig.RAG) == 0 {
-			ragImage := os.Getenv(OpenStackLightSpeedRAGImageEnv)
-			if ragImage != "" {
+			if openstackLightspeedRAGImage != "" {
 				olsconfig.Spec.OLSConfig.RAG = []upstreamolsv1alpha1.RAGSpec{
 					{
-						Image:     ragImage,
+						Image:     openstackLightspeedRAGImage,
 						IndexPath: "/rag/vector_db/os_product_docs",
 					},
 				}
-				olsconfiglog.Info("Set OpenStackLightSpeed RAG image", "image", ragImage)
+				olsconfiglog.Info("Set OpenStackLightSpeed RAG image", "image", openstackLightspeedRAGImage)
 			} else {
 				olsconfiglog.Info("OpenStackLightSpeed RAG image environment variable not set",
 					"envVar", OpenStackLightSpeedRAGImageEnv)
-			}
-		} else {
-			// If RAG is already configured, ensure IndexPath is set
-			for i := range olsconfig.Spec.OLSConfig.RAG {
-				if olsconfig.Spec.OLSConfig.RAG[i].IndexPath == "" {
-					olsconfig.Spec.OLSConfig.RAG[i].IndexPath = "/rag/vector_db/os_product_docs"
-					olsconfiglog.Info("Set RAG IndexPath for existing RAG entry", "index", i)
-				}
 			}
 		}
 	}
