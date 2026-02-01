@@ -65,6 +65,9 @@ spec:
           - --health-probe-bind-address=:8081
         image: controller:latest
         name: manager
+        env:
+        - name: RELATED_IMAGE_OPENSTACK_LIGHTSPEED_RAG_IMAGE_URL_DEFAULT
+          value: quay.io/dprince/rag-content-openstack:rhoso-18.0
         ports: []
         securityContext:
           allowPrivilegeEscalation: false
