@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: quay.io
   IMAGE_ORG: ${{ secrets.IMAGE_ORG }}
-  OPERATOR_NAME: openstack-lightspeed
+  OPERATOR_NAME: openstack-lightspeed-webhook
 
 jobs:
   build-and-publish:
